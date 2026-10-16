@@ -1,0 +1,6 @@
+.DS_Store
+.pio
+.vscode
+*.eez-project
+*.eez-project-ui-state
+lib/ui/.eez-project-build
