@@ -6,17 +6,14 @@
 #include <TFT_eSPI.h>
 #endif
 #include <ui.h>
+#include <ESP32Time.h>
 
-/*To use the built-in examples and demos of LVGL uncomment the includes below respectively.
- *You also need to copy `lvgl/examples` to `lvgl/src/examples`. Similarly for the demos `lvgl/demos` to `lvgl/src/demos`.
- *Note that the `lv_examples` library is for LVGL v7 and you shouldn't install it for this version (since LVGL v8)
- *as the examples and demos are now part of the main LVGL library. */
-
-//#include <examples/lv_examples.h>
 #include <demos/lv_demos.h>
 
+ESP32Time rtc;
+
 // Set Touch Driver
-CST816S touch(TOUCH_SDA, TOUCH_SCL, TOUCH_RST, TOUCH_IRQ);	// sda, scl, rst, irq
+CST816S touch(TOUCH_SDA, TOUCH_SCL, TOUCH_RST, TOUCH_IRQ);  // sda, scl, rst, irq
 
 /*Set to your screen resolution and rotation*/
 #define TFT_HOR_RES   240
@@ -39,16 +36,6 @@ void my_print( lv_log_level_t level, const char * buf )
 /* LVGL calls it when a rendered image needs to copied to the display*/
 void my_disp_flush( lv_display_t *disp, const lv_area_t *area, uint8_t * px_map)
 {
-    /*Copy `px map` to the `area`*/
-
-    /*For example ("my_..." functions needs to be implemented by you)
-    uint32_t w = lv_area_get_width(area);
-    uint32_t h = lv_area_get_height(area);
-
-    my_set_window(area->x1, area->y1, w, h);
-    my_draw_bitmaps(px_map, w * h);
-     */
-
     /*Call it to tell LVGL you are ready*/
     lv_display_flush_ready(disp);
 }
@@ -56,21 +43,13 @@ void my_disp_flush( lv_display_t *disp, const lv_area_t *area, uint8_t * px_map)
 /*Read the touchpad*/
 void my_touchpad_read( lv_indev_t * indev, lv_indev_data_t * data )
 {
-    
     bool touched = touch.available();
     if(!touched) {
         data->state = LV_INDEV_STATE_RELEASED;
     } else {
         data->state = LV_INDEV_STATE_PRESSED;
-
         data->point.x = TFT_HOR_RES - 1 - touch.data.x;
         data->point.y = TFT_VER_RES - 1 - touch.data.y;
-
-        Serial.print( "Data x " );
-        Serial.println( touch.data.x );
-
-        Serial.print( "Data y " );
-        Serial.println( touch.data.y );
     }
 }
 
@@ -78,6 +57,45 @@ void my_touchpad_read( lv_indev_t * indev, lv_indev_data_t * data )
 static uint32_t my_tick(void)
 {
     return millis();
+}
+
+static void update_second_cb(lv_timer_t * timer)
+{
+    static int current_second = 0; 
+    
+    current_second = rtc.getSecond();
+
+    int32_t rotation_angle = current_second * 60;
+    
+    if (objects.seconds_hand) {
+        lv_image_set_rotation(objects.seconds_hand, rotation_angle);
+    }
+}
+
+static void update_minute_cb(lv_timer_t * timer)
+{
+    static int current_minute = 0; 
+    
+    current_minute = rtc.getMinute();
+
+    int32_t rotation_angle = current_minute * 60;
+    
+    if (objects.minutes_hand) {
+        lv_image_set_rotation(objects.minutes_hand, rotation_angle);
+    }
+}
+
+static void update_hour_cb(lv_timer_t * timer)
+{
+    static int current_hour = 0; 
+    
+    current_hour = rtc.getHour();
+
+    int32_t rotation_angle = current_hour * 60;
+    
+    if (objects.hours_hand) {
+        lv_image_set_rotation(objects.hours_hand, rotation_angle);
+    }
 }
 
 void setup()
@@ -102,43 +120,35 @@ void setup()
 
     lv_display_t * disp;
 #if LV_USE_TFT_ESPI
-    /*TFT_eSPI can be enabled lv_conf.h to initialize the display in a simple way*/
     disp = lv_tft_espi_create(TFT_HOR_RES, TFT_VER_RES, draw_buf, sizeof(draw_buf));
     lv_display_set_rotation(disp, TFT_ROTATION);
-
 #else
-    /*Else create a display yourself*/
     disp = lv_display_create(TFT_HOR_RES, TFT_VER_RES);
     lv_display_set_flush_cb(disp, my_disp_flush);
     lv_display_set_buffers(disp, draw_buf, NULL, sizeof(draw_buf), LV_DISPLAY_RENDER_MODE_PARTIAL);
 #endif
 
-    /*Initialize the (dummy) input device driver*/
+    /*Initialize input device driver*/
     lv_indev_t * indev = lv_indev_create();
-    lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER); /*Touchpad should have POINTER type*/
+    lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
     lv_indev_set_read_cb(indev, my_touchpad_read);
 
-    /* Create a simple label
-     * ---------------------
-     lv_obj_t *label = lv_label_create( lv_screen_active() );
-     lv_label_set_text( label, "Hello Arduino, I'm LVGL!" );
-     lv_obj_align( label, LV_ALIGN_CENTER, 0, 0 );
-
-     * Try an example. See all the examples
-     *  - Online: https://docs.lvgl.io/master/examples.html
-     *  - Source codes: https://github.com/lvgl/lvgl/tree/master/examples
-     * ----------------------------------------------------------------
-
-     lv_example_btn_1();
-
-     * Or try out a demo. Don't forget to enable the demos in lv_conf.h. E.g. LV_USE_DEMO_WIDGETS
-     * -------------------------------------------------------------------------------------------
-    */
-    // lv_demo_music();
-    // lv_obj_t *label = lv_label_create( lv_screen_active() );
-    // lv_label_set_text( label, "Hello World, I'm LVGL!" );
-    // lv_obj_align( label, LV_ALIGN_CENTER, 0, 0 );
+    // Initialize UI generated by EEZ Studio
     ui_init();
+
+    update_hour_cb(NULL);
+    update_minute_cb(NULL);
+    update_second_cb(NULL);
+
+    // Create an LVGL timer to update the clock hand every minute (60000ms)
+    // For testing right away, you can change 60000 to 1000 (1 second)
+    lv_timer_create(update_second_cb, 1000, NULL);
+    lv_timer_create(update_second_cb, 60000, NULL);
+    lv_timer_create(update_second_cb, 3600000, NULL);
+
+
+
+    rtc.setTime(00, 45, 15, 17, 1, 2026); 
 
     Serial.println( "Setup done" );
 }
