@@ -1,0 +1,2 @@
+# Watch Project
+This is a custom OS for the Waveshare ESP32-S3 Touch LCD 1.28. It has a sleek analog face, with the date, and supports syncing the time over BLE. It uses the built in RTC to keep time, and will auto sleep after 5 seconds of inactivity.
