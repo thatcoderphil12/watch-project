@@ -36,14 +36,23 @@ void create_screen_main() {
             lv_image_set_src(obj, &img_hour_markers);
         }
         {
-            // Hours-Hand
-            lv_obj_t *obj = lv_image_create(parent_obj);
-            objects.hours_hand = obj;
-            lv_obj_set_pos(obj, 119, 37);
+            // Date
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.date = obj;
+            lv_obj_set_pos(obj, 61, 79);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_image_set_src(obj, &img_hours_hand);
-            lv_image_set_pivot(obj, 0, 83);
-            lv_image_set_rotation(obj, 9);
+            lv_obj_set_style_text_font(obj, &ui_font_press_start_2_p, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(obj, lv_color_hex(0x1565c0), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_text(obj, "");
+        }
+        {
+            // Seconds-Hand
+            lv_obj_t *obj = lv_image_create(parent_obj);
+            objects.seconds_hand = obj;
+            lv_obj_set_pos(obj, 120, 9);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_image_set_src(obj, &img_seconds_hand);
+            lv_image_set_pivot(obj, 0, 111);
         }
         {
             // Minutes-Hand
@@ -55,13 +64,14 @@ void create_screen_main() {
             lv_image_set_pivot(obj, 0, 103);
         }
         {
-            // Seconds-Hand
+            // Hours-Hand
             lv_obj_t *obj = lv_image_create(parent_obj);
-            objects.seconds_hand = obj;
-            lv_obj_set_pos(obj, 120, 9);
+            objects.hours_hand = obj;
+            lv_obj_set_pos(obj, 119, 37);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_image_set_src(obj, &img_seconds_hand);
-            lv_image_set_pivot(obj, 0, 111);
+            lv_image_set_src(obj, &img_hours_hand);
+            lv_image_set_pivot(obj, 0, 83);
+            lv_image_set_rotation(obj, 9);
         }
     }
     
@@ -69,6 +79,15 @@ void create_screen_main() {
 }
 
 void tick_screen_main() {
+    {
+        const char *new_val = get_var_date();
+        const char *cur_val = lv_label_get_text(objects.date);
+        if (strcmp(new_val, cur_val) != 0) {
+            tick_value_change_obj = objects.date;
+            lv_label_set_text(objects.date, new_val);
+            tick_value_change_obj = NULL;
+        }
+    }
 }
 
 typedef void (*tick_screen_func_t)();
@@ -89,6 +108,7 @@ void tick_screen_by_id(enum ScreensEnum screenId) {
 //
 
 ext_font_desc_t fonts[] = {
+    { "Press_Start_2P", &ui_font_press_start_2_p },
 #if LV_FONT_MONTSERRAT_8
     { "MONTSERRAT_8", &lv_font_montserrat_8 },
 #endif

@@ -403,7 +403,7 @@ static void servicePowerManagement()
 
 void setup()
 {
-    Serial.begin(115200);
+    Serial.begin(9600);
     delay(100);
 
     Serial.println();
@@ -515,6 +515,8 @@ void loop()
     if (delayMs > 50) {
         delayMs = 50;
     }
+
+    ui_tick();
 
     delay(delayMs);
 }

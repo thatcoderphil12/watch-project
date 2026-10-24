@@ -119,6 +119,33 @@ String getRtcTime() {
     return String(buffer);
 }
 
+String getRtcDate() {
+    const time_t now = time(nullptr);
+
+    if (now < MIN_VALID_TIME) {
+        return "01/01/2026";
+    }
+
+    struct tm utc {};
+
+    if (gmtime_r(&now, &utc) == nullptr) {
+        return "01/01/2026";
+    }
+
+    char buffer[20];
+
+    if (strftime(
+            buffer,
+            sizeof(buffer),
+            "%m/%d/%Y",
+            &utc
+        ) == 0) {
+        return "UNSET";
+    }
+
+    return String(buffer);
+}
+
 static time_t utcToEpoch(
     int year, int month, int day,
     int hour, int minute, int second
