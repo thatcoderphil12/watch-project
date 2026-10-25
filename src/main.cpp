@@ -4,8 +4,8 @@
 #include <lvgl.h>
 #if LV_USE_TFT_ESPI
 #include <TFT_eSPI.h>
-#include <ui.h>
 #endif
+#include <ui.h>
 
 /*To use the built-in examples and demos of LVGL uncomment the includes below respectively.
  *You also need to copy `lvgl/examples` to `lvgl/src/examples`. Similarly for the demos `lvgl/demos` to `lvgl/src/demos`.
@@ -13,7 +13,7 @@
  *as the examples and demos are now part of the main LVGL library. */
 
 //#include <examples/lv_examples.h>
-#include <demos/lv_demos.h>
+//#include <demos/lv_demos.h>
 
 // Set Touch Driver
 CST816S touch(TOUCH_SDA, TOUCH_SCL, TOUCH_RST, TOUCH_IRQ);	// sda, scl, rst, irq
@@ -21,7 +21,7 @@ CST816S touch(TOUCH_SDA, TOUCH_SCL, TOUCH_RST, TOUCH_IRQ);	// sda, scl, rst, irq
 /*Set to your screen resolution and rotation*/
 #define TFT_HOR_RES   240
 #define TFT_VER_RES   240
-#define TFT_ROTATION  LV_DISPLAY_ROTATION_0
+#define TFT_ROTATION  LV_DISPLAY_ROTATION_270
 
 /*LVGL draw into this buffer, 1/10 screen size usually works well. The size is in bytes*/
 #define DRAW_BUF_SIZE (TFT_HOR_RES * TFT_VER_RES / 10 * (LV_COLOR_DEPTH / 8))
@@ -73,8 +73,8 @@ void touchTask(void *pvParameters)
         } else {
             data.pressed = true;
 
-            data.x = touch.data.x;
-            data.y = touch.data.y;
+            data.x = TFT_WIDTH - touch.data.x;
+            data.y = TFT_HEIGHT - touch.data.y;
 
         }
             xQueueSend(touchQueue, &data, pdMS_TO_TICKS(10));
