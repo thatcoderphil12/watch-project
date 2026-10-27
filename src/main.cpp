@@ -6,6 +6,8 @@
 #include <TFT_eSPI.h>
 #endif
 #include <ui.h>
+#include "ble-server.h"
+#include "rtc-manager.h"
 
 /*To use the built-in examples and demos of LVGL uncomment the includes below respectively.
  *You also need to copy `lvgl/examples` to `lvgl/src/examples`. Similarly for the demos `lvgl/demos` to `lvgl/src/demos`.
@@ -174,7 +176,29 @@ void setup()
     
     // lv_demo_music();
 
+    ble_init();
+
+    xTaskCreatePinnedToCore(
+        rtc_recieve,
+        "RTCTask",
+        4096,
+        NULL,
+        2,
+        NULL,
+        0
+    );
+
      ui_init();
+
+    xTaskCreatePinnedToCore(
+        rtc_print,
+        "RTCPrint",
+        2048,
+        NULL,
+        2,
+        NULL,
+        0
+    );
 }
 
 void loop()
