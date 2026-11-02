@@ -8,6 +8,7 @@
 #include <ui.h>
 #include "ble-server.h"
 #include "rtc-manager.h"
+#include "backlight-manager.h"
 
 /*To use the built-in examples and demos of LVGL uncomment the includes below respectively.
  *You also need to copy `lvgl/examples` to `lvgl/src/examples`. Similarly for the demos `lvgl/demos` to `lvgl/src/demos`.
@@ -106,13 +107,27 @@ static uint32_t my_tick(void)
     return millis();
 }
 
+void clock_hands_cb(lv_timer_t * update_clock) {
+    time_struct current_time;
+    current_time = get_rtc_time();
+    int32_t hours_rot;
+    int32_t minutes_rot;
+    int32_t seconds_rot;
+    hours_rot = (((current_time.hour % 12) * 30) + (current_time.minute * 0.5) + (current_time.second * 1/120)) * 10;
+    minutes_rot = ((current_time.minute * 6) + (current_time.second * 0.1)) * 10;
+    seconds_rot = (current_time.second * 6) * 10;
+    lv_image_set_rotation(objects.hours_hand, hours_rot);
+    lv_image_set_rotation(objects.minutes_hand, minutes_rot);
+    lv_image_set_rotation(objects.seconds_hand, seconds_rot);
+}
+
 void setup()
 {
     
     String LVGL_Arduino = "Hello Arduino! ";
     LVGL_Arduino += String('V') + lv_version_major() + "." + lv_version_minor() + "." + lv_version_patch();
 
-    Serial.begin( 9600 );
+    Serial.begin( 115200 );
     Serial.println( LVGL_Arduino );
     
     lv_init();
@@ -188,17 +203,13 @@ void setup()
         0
     );
 
+     DisplayManager::init(2);
+
      ui_init();
 
-    xTaskCreatePinnedToCore(
-        rtc_print,
-        "RTCPrint",
-        2048,
-        NULL,
-        2,
-        NULL,
-        0
-    );
+     lv_timer_t * update_clock = lv_timer_create_basic();
+     lv_timer_set_cb(update_clock, clock_hands_cb);
+     lv_timer_set_period(update_clock, 1000);
 }
 
 void loop()

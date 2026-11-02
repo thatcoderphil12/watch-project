@@ -18,6 +18,28 @@ objects_t objects;
 
 lv_obj_t *tick_value_change_obj;
 
+static void event_handler_cb_main_brightness_slider(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target_obj(e);
+        if (tick_value_change_obj != ta) {
+            int32_t value = lv_slider_get_value(ta);
+            set_var_brightness(value);
+        }
+    }
+}
+
+static void event_handler_cb_brightness_brightness_arc(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target_obj(e);
+        if (tick_value_change_obj != ta) {
+            int32_t value = lv_arc_get_value(ta);
+            set_var_brightness(value);
+        }
+    }
+}
+
 //
 // Screens
 //
@@ -73,6 +95,15 @@ void create_screen_main() {
             lv_image_set_pivot(obj, 0, 83);
             lv_image_set_rotation(obj, 9);
         }
+        {
+            // brightness_slider
+            lv_obj_t *obj = lv_slider_create(parent_obj);
+            objects.brightness_slider = obj;
+            lv_obj_set_pos(obj, 70, 143);
+            lv_obj_set_size(obj, 100, 10);
+            lv_slider_set_range(obj, 0, 255);
+            lv_obj_add_event_cb(obj, event_handler_cb_main_brightness_slider, LV_EVENT_ALL, 0);
+        }
     }
     
     tick_screen_main();
@@ -88,14 +119,78 @@ void tick_screen_main() {
             tick_value_change_obj = NULL;
         }
     }
+    {
+        int32_t new_val = get_var_brightness();
+        int32_t cur_val = lv_slider_get_value(objects.brightness_slider);
+        if (new_val != cur_val) {
+            tick_value_change_obj = objects.brightness_slider;
+            lv_slider_set_value(objects.brightness_slider, new_val, LV_ANIM_OFF);
+            tick_value_change_obj = NULL;
+        }
+    }
+}
+
+void create_screen_brightness() {
+    lv_obj_t *obj = lv_obj_create(0);
+    objects.brightness = obj;
+    lv_obj_set_pos(obj, 0, 0);
+    lv_obj_set_size(obj, 240, 240);
+    lv_obj_set_style_text_color(obj, lv_color_hex(0x1565c0), LV_PART_MAIN | LV_STATE_DEFAULT);
+    {
+        lv_obj_t *parent_obj = obj;
+        {
+            // Brightness-Arc
+            lv_obj_t *obj = lv_arc_create(parent_obj);
+            objects.brightness_arc = obj;
+            lv_obj_set_pos(obj, 20, 20);
+            lv_obj_set_size(obj, 200, 200);
+            lv_arc_set_range(obj, 0, 255);
+            lv_obj_add_event_cb(obj, event_handler_cb_brightness_brightness_arc, LV_EVENT_ALL, 0);
+            lv_obj_set_style_text_color(obj, lv_color_hex(0x1565c0), LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // brightness_text
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.brightness_text = obj;
+            lv_obj_set_pos(obj, 102, 115);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_obj_set_style_text_font(obj, &ui_font_press_start_2_p, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(obj, lv_color_hex(0x1565c0), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_text(obj, "");
+        }
+    }
+    
+    tick_screen_brightness();
+}
+
+void tick_screen_brightness() {
+    {
+        int32_t new_val = get_var_brightness();
+        int32_t cur_val = lv_arc_get_value(objects.brightness_arc);
+        if (new_val != cur_val) {
+            tick_value_change_obj = objects.brightness_arc;
+            lv_arc_set_value(objects.brightness_arc, new_val);
+            tick_value_change_obj = NULL;
+        }
+    }
+    {
+        const char *new_val = get_var_brightness_string();
+        const char *cur_val = lv_label_get_text(objects.brightness_text);
+        if (strcmp(new_val, cur_val) != 0) {
+            tick_value_change_obj = objects.brightness_text;
+            lv_label_set_text(objects.brightness_text, new_val);
+            tick_value_change_obj = NULL;
+        }
+    }
 }
 
 typedef void (*tick_screen_func_t)();
 tick_screen_func_t tick_screen_funcs[] = {
     tick_screen_main,
+    tick_screen_brightness,
 };
 void tick_screen(int screen_index) {
-    if (screen_index >= 0 && screen_index < 1) {
+    if (screen_index >= 0 && screen_index < 2) {
         tick_screen_funcs[screen_index]();
     }
 }
@@ -194,4 +289,5 @@ void create_screens() {
     // Initialize screens
     // Create screens
     create_screen_main();
+    create_screen_brightness();
 }

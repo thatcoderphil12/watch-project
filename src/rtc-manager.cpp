@@ -4,7 +4,8 @@
 
 #include <ESP32Time.h>
 
-ESP32Time rtc(-14400);
+// Change -18,000 based off of your timezone (Currently configured for US-East)
+ESP32Time rtc(-18000);
 
 void rtc_recieve(void *pvParameters) {
     char receivedBuffer[19];
@@ -14,12 +15,18 @@ void rtc_recieve(void *pvParameters) {
             rtc.setTime(epochTime);
         }
     }
-}
+};
 
-void rtc_print(void *pvParameters) {
-    while (true)
-    {
-        Serial.println(rtc.getTime("%A %B %d %Y %H:%M:%S"));
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-}
+time_struct get_rtc_time() {
+    time_struct result;
+    result.hour = rtc.getHour();
+    result.minute = rtc.getMinute();
+    result.second = rtc.getSecond();
+    return result;
+};
+
+String get_rtc_date() {
+    String result;
+    result = rtc.getTime("%m/%d/%Y");
+    return result;
+};

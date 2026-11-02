@@ -3,8 +3,8 @@
 #include "ble-server.h"
 
 
-#define SERVICE_UUID "ccd187a1-f3be-464b-8a49-d989e9c104ce"
-#define CHARACTERISTIC_UUID "573c8962-c776-4016-a280-8daea13a01a8"
+#define RTC_SERVICE_UUID "ccd187a1-f3be-464b-8a49-d989e9c104ce"
+#define RTC_SYNC_CHARACTERISTIC_UUID "573c8962-c776-4016-a280-8daea13a01a8"
 
 QueueHandle_t rtcQueue;
 
@@ -29,10 +29,10 @@ void ble_init() {
     NimBLEDevice::init("NimBLE-ESP32-PIO");
 
     NimBLEServer *pServer = NimBLEDevice::createServer();
-    NimBLEService *pRTC = pServer->createService(SERVICE_UUID);
+    NimBLEService *pRTC = pServer->createService(RTC_SERVICE_UUID);
 
     NimBLECharacteristic *pRTCUpdate = pRTC->createCharacteristic(
-        CHARACTERISTIC_UUID,
+        RTC_SYNC_CHARACTERISTIC_UUID,
         NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE
     );
 
@@ -40,7 +40,7 @@ void ble_init() {
     pRTCUpdate->setCallbacks(new RTCUpdateCallbacks());
 
     NimBLEAdvertising *pAdvertising = NimBLEDevice::getAdvertising();
-    pAdvertising->addServiceUUID(SERVICE_UUID);
+    pAdvertising->addServiceUUID(RTC_SERVICE_UUID);
     pAdvertising->start();
 }
 
