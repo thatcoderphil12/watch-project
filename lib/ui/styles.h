@@ -7,6 +7,11 @@
 extern "C" {
 #endif
 
+// Style: 8-Bit (Text)
+lv_style_t *get_style_8_bit__text__MAIN_DEFAULT();
+void add_style_8_bit__text_(lv_obj_t *obj);
+void remove_style_8_bit__text_(lv_obj_t *obj);
+
 #ifdef __cplusplus
 }
 #endif

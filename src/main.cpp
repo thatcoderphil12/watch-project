@@ -9,6 +9,7 @@
 #include "ble-server.h"
 #include "rtc-manager.h"
 #include "backlight-manager.h"
+#include "screen-manager.h"
 
 /*To use the built-in examples and demos of LVGL uncomment the includes below respectively.
  *You also need to copy `lvgl/examples` to `lvgl/src/examples`. Similarly for the demos `lvgl/demos` to `lvgl/src/demos`.
@@ -191,7 +192,7 @@ void setup()
     
     // lv_demo_music();
 
-    ble_init();
+    BLEServerManager::init();
 
     xTaskCreatePinnedToCore(
         rtc_recieve,
@@ -210,6 +211,27 @@ void setup()
      lv_timer_t * update_clock = lv_timer_create_basic();
      lv_timer_set_cb(update_clock, clock_hands_cb);
      lv_timer_set_period(update_clock, 1000);
+
+    lv_obj_add_event_cb(
+        objects.main,
+        screen_gesture_cb_main,
+        LV_EVENT_GESTURE,
+        NULL
+    );
+
+    lv_obj_add_event_cb(
+        objects.brightness,
+        screen_gesture_cb_brightness,
+        LV_EVENT_GESTURE,
+        NULL
+    );
+
+    lv_obj_add_event_cb(
+        objects.bluetooth,
+        screen_gesture_cb_bluetooth,
+        LV_EVENT_GESTURE,
+        NULL
+    );
 }
 
 void loop()
