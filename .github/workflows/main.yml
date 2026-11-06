@@ -1,0 +1,75 @@
+name: Build Firmware Release
+
+on:
+  push:
+    tags:
+      - '**'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build PlatformIO Firmware
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Verify tagged commit is on main
+        shell: bash
+        run: |
+          git fetch origin +refs/heads/main:refs/remotes/origin/main
+
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main; then
+            echo "Error: Tagged commit is not on main."
+            exit 1
+          fi
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            ninja-build \
+            git \
+            pkg-config \
+            python3 \
+            python3-venv \
+            python3-pip
+
+      - name: Install PlatformIO
+        run: |
+          python3 -m venv "$RUNNER_TEMP/platformio-venv"
+          "$RUNNER_TEMP/platformio-venv/bin/pip" install --upgrade pip platformio
+          echo "$RUNNER_TEMP/platformio-venv/bin" >> "$GITHUB_PATH"
+
+      - name: Build firmware
+        run: pio run
+
+      - name: Collect firmware ELF
+        shell: bash
+        run: |
+          mapfile -t files < <(find .pio/build -type f -name firmware.elf)
+
+          if [ "${#files[@]}" -ne 1 ]; then
+            echo "Expected exactly one firmware.elf, found ${#files[@]}."
+            printf '%s\n' "${files[@]}"
+            exit 1
+          fi
+
+          cp "${files[0]}" firmware.elf
+          ls -lh firmware.elf
+
+      - name: Create draft GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          draft: true
+          files: firmware.elf
+          fail_on_unmatched_files: true
