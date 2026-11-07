@@ -1,0 +1,24 @@
+{
+  "files": [
+    "actions.h",
+    "fonts.h",
+    "images.c",
+    "images.h",
+    "screens.c",
+    "screens.h",
+    "structs.h",
+    "styles.c",
+    "styles.h",
+    "ui.c",
+    "ui.h",
+    "ui_font_press_start_2_p.c",
+    "ui_image_bluetooth.c",
+    "ui_image_bluetooth_connected.c",
+    "ui_image_bluetooth_crossed.c",
+    "ui_image_hour_markers.c",
+    "ui_image_hours_hand.c",
+    "ui_image_minute_hand.c",
+    "ui_image_seconds_hand.c",
+    "vars.h"
+  ]
+}
